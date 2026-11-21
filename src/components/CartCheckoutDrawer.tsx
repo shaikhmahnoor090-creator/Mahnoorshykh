@@ -21,6 +21,7 @@ import type {
   TcsServiceTier,
 } from '../types/store';
 import { computeDeliveryFee, formatPKR, formatPaymentLabel } from '../utils/format';
+import { createOrder } from '../utils/storeApi';
 
 export interface CartItem {
   product: Product;
@@ -131,35 +132,29 @@ export const CartCheckoutDrawer: React.FC<CartCheckoutDrawerProps> = ({
 
     setSubmitting(true);
     try {
-      const res = await fetch('/api/orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          customerName,
-          customerPhone,
-          address,
-          postalCode,
-          cityId: selectedCity?.id,
-          tcsServiceTier: tcsTier,
-          paymentMethod,
-          paymentAccountNumber: paymentMethod === 'cod' ? undefined : paymentAccountNumber,
-          paymentPin: paymentMethod === 'cod' ? undefined : paymentPin,
-          items: items.map((i) => ({ productId: i.product.id, quantity: i.quantity })),
-        }),
+      const data = await createOrder({
+        customerName,
+        customerPhone,
+        address,
+        postalCode,
+        cityId: selectedCity?.id || '',
+        tcsServiceTier: tcsTier,
+        paymentMethod,
+        paymentAccountNumber: paymentMethod === 'cod' ? undefined : paymentAccountNumber,
+        paymentPin: paymentMethod === 'cod' ? undefined : paymentPin,
+        items: items.map((i) => ({ productId: i.product.id, quantity: i.quantity })),
       });
-      const data = await res.json();
-      if (!res.ok) {
-        setErrorMsg(data.error || 'Unable to place order. Please review your details.');
-        setSubmitting(false);
-        return;
-      }
       setConfirmedOrder(data.order);
       onOrderCreated(data.order);
       onClearCart();
       setPaymentPin('');
       setStep('confirmed');
-    } catch {
-      setErrorMsg('Network error while confirming your order. Please try again.');
+    } catch (err) {
+      setErrorMsg(
+        err instanceof Error
+          ? err.message
+          : 'Unable to place order. Please review your details.'
+      );
     } finally {
       setSubmitting(false);
     }

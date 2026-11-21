@@ -11,6 +11,7 @@ import { TcsRatesAndTracker } from './components/TcsRatesAndTracker';
 import { StoreDbManager } from './components/StoreDbManager';
 import { PWAInstallButton } from './components/PWAInstallButton';
 import { OfflineIndicator } from './components/OfflineIndicator';
+import { fetchStoreDb } from './utils/storeApi';
 
 const CATEGORIES: Array<'All' | ProductCategory> = [
   'All',
@@ -43,19 +44,14 @@ export default function App() {
 
   useEffect(() => {
     let mounted = true;
-    fetch('/api/db')
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data: MismuDatabase | null) => {
-        if (mounted && data && Array.isArray(data.products)) {
-          setDb(data);
-          if (data.cities.length > 0 && !data.cities.some((c) => c.id === selectedCityId)) {
-            setSelectedCityId(data.cities[0].id);
-          }
+    fetchStoreDb().then((data) => {
+      if (mounted && data && Array.isArray(data.products)) {
+        setDb(data);
+        if (data.cities.length > 0 && !data.cities.some((c) => c.id === selectedCityId)) {
+          setSelectedCityId(data.cities[0].id);
         }
-      })
-      .catch(() => {
-        // Keep seeded initial database if offline
-      });
+      }
+    });
     return () => {
       mounted = false;
     };
@@ -124,11 +120,8 @@ export default function App() {
   };
 
   const handleOrderCreated = (order: Order) => {
-    fetch('/api/db')
-      .then((res) => (res.ok ? res.json() : null))
-      .then((fresh: MismuDatabase | null) => {
-        if (fresh) setDb(fresh);
-      })
+    fetchStoreDb()
+      .then((fresh) => setDb(fresh))
       .catch(() => {
         setDb((prev) => ({ ...prev, orders: [order, ...prev.orders] }));
       });

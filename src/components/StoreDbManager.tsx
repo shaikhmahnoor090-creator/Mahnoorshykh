@@ -19,6 +19,18 @@ import type {
   ProductCategory,
 } from '../types/store';
 import { formatPKR, formatPaymentLabel } from '../utils/format';
+import {
+  addCity,
+  addProduct,
+  deleteCity,
+  deleteProduct,
+  importFullDb,
+  resetFullDb,
+  updateCity,
+  updateOrderStatus,
+  updatePaymentSettings,
+  updateProduct,
+} from '../utils/storeApi';
 
 interface StoreDbManagerProps {
   db: MismuDatabase;
@@ -91,135 +103,111 @@ export const StoreDbManager: React.FC<StoreDbManagerProps> = ({
   const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
-    const res = await fetch('/api/products', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
+    try {
+      const nextDb = await addProduct({
         ...newProd,
         price: Number(newProd.price),
         stock: Number(newProd.stock),
-      }),
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      setErrorMsg(data.error || 'Failed to add product.');
-      return;
+      });
+      onDbUpdated(nextDb);
+      setNewProd({
+        name: '',
+        category: 'Home & Living',
+        price: '3200',
+        stock: '20',
+        sku: '',
+        tagline: '',
+        image: PRODUCT_IMAGE_PRESETS[0].url,
+      });
+      showToast('Product saved to Mismu database.');
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : 'Failed to add product.');
     }
-    onDbUpdated(data.db);
-    setNewProd({
-      name: '',
-      category: 'Home & Living',
-      price: '3200',
-      stock: '20',
-      sku: '',
-      tagline: '',
-      image: PRODUCT_IMAGE_PRESETS[0].url,
-    });
-    showToast('Product saved to Mismu database.');
   };
 
   const handleUpdateProduct = async (product: Product) => {
-    const res = await fetch(`/api/products/${product.id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(product),
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      setErrorMsg(data.error || 'Failed to update product.');
-      return;
+    try {
+      const nextDb = await updateProduct(product);
+      onDbUpdated(nextDb);
+      showToast(`Updated "${product.name}".`);
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : 'Failed to update product.');
     }
-    onDbUpdated(data.db);
-    showToast(`Updated "${product.name}".`);
   };
 
   const handleDeleteProduct = async (id: string) => {
-    const res = await fetch(`/api/products/${id}`, { method: 'DELETE' });
-    const data = await res.json();
-    if (res.ok) {
-      onDbUpdated(data.db);
+    try {
+      const nextDb = await deleteProduct(id);
+      onDbUpdated(nextDb);
       showToast('Product removed.');
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : 'Failed to delete product.');
     }
   };
 
   const handleAddCity = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
-    const res = await fetch('/api/cities', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
+    try {
+      const nextDb = await addCity({
         ...newCity,
         standardFee: Number(newCity.standardFee),
         overnightExtra: Number(newCity.overnightExtra),
-      }),
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      setErrorMsg(data.error || 'Failed to add city.');
-      return;
+      });
+      onDbUpdated(nextDb);
+      setNewCity({
+        city: '',
+        province: 'Punjab',
+        tcsZone: 'Regional Standard',
+        standardFee: '270',
+        overnightExtra: '150',
+        estimatedDays: '2–3 Working Days',
+        codAvailable: true,
+      });
+      showToast('City TCS rate added to database.');
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : 'Failed to add city.');
     }
-    onDbUpdated(data.db);
-    setNewCity({
-      city: '',
-      province: 'Punjab',
-      tcsZone: 'Regional Standard',
-      standardFee: '270',
-      overnightExtra: '150',
-      estimatedDays: '2–3 Working Days',
-      codAvailable: true,
-    });
-    showToast('City TCS rate added to database.');
   };
 
   const handleUpdateCity = async (city: CityRate) => {
-    const res = await fetch(`/api/cities/${city.id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(city),
-    });
-    const data = await res.json();
-    if (res.ok) {
-      onDbUpdated(data.db);
+    try {
+      const nextDb = await updateCity(city);
+      onDbUpdated(nextDb);
       showToast(`Updated TCS delivery rate for ${city.city}.`);
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : 'Failed to update city.');
     }
   };
 
   const handleDeleteCity = async (id: string) => {
-    const res = await fetch(`/api/cities/${id}`, { method: 'DELETE' });
-    const data = await res.json();
-    if (!res.ok) {
-      setErrorMsg(data.error || 'Cannot delete city.');
-      return;
+    try {
+      const nextDb = await deleteCity(id);
+      onDbUpdated(nextDb);
+      showToast('City removed.');
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : 'Cannot delete city.');
     }
-    onDbUpdated(data.db);
-    showToast('City removed.');
   };
 
   const handleSavePayments = async (e: React.FormEvent) => {
     e.preventDefault();
-    const res = await fetch('/api/payment-settings', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payDraft),
-    });
-    const data = await res.json();
-    if (res.ok) {
-      onDbUpdated(data.db);
+    try {
+      const nextDb = await updatePaymentSettings(payDraft);
+      onDbUpdated(nextDb);
       showToast('EasyPaisa, JazzCash & TCS settings saved.');
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : 'Failed to save settings.');
     }
   };
 
   const handleUpdateOrderStatus = async (orderId: string, status: OrderStatus) => {
-    const res = await fetch(`/api/orders/${orderId}/status`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status }),
-    });
-    const data = await res.json();
-    if (res.ok) {
-      onDbUpdated(data.db);
+    try {
+      const nextDb = await updateOrderStatus(orderId, status);
+      onDbUpdated(nextDb);
       showToast(`Order ${orderId} updated to "${status}".`);
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : 'Failed to update order status.');
     }
   };
 
@@ -227,32 +215,34 @@ export const StoreDbManager: React.FC<StoreDbManagerProps> = ({
     setErrorMsg('');
     try {
       const parsed = JSON.parse(jsonDraft);
-      const res = await fetch('/api/db/import', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(parsed),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setErrorMsg(data.error || 'Invalid JSON structure.');
-        return;
-      }
-      onDbUpdated(data);
-      setPayDraft(data.paymentSettings);
+      const nextDb = await importFullDb(parsed);
+      onDbUpdated(nextDb);
+      setPayDraft(nextDb.paymentSettings);
       showToast('Database imported and saved.');
-    } catch {
-      setErrorMsg('Invalid JSON syntax. Please paste valid JSON exported from Mismu.');
+    } catch (err) {
+      setErrorMsg(
+        err instanceof Error
+          ? err.message
+          : 'Invalid JSON syntax. Please paste valid JSON exported from Mismu.'
+      );
     }
   };
 
   const handleResetDb = async () => {
-    const res = await fetch('/api/db/reset', { method: 'POST' });
-    const data = await res.json();
-    if (res.ok) {
-      onDbUpdated(data);
-      setPayDraft(data.paymentSettings);
-      showToast('Database reset to default catalog and city rates.');
-    }
+    const nextDb = await resetFullDb();
+    onDbUpdated(nextDb);
+    setPayDraft(nextDb.paymentSettings);
+    showToast('Database reset to default catalog and city rates.');
+  };
+
+  const handleDownloadJson = () => {
+    const blob = new Blob([JSON.stringify(db, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'mismu-database-backup.json';
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -280,14 +270,14 @@ export const StoreDbManager: React.FC<StoreDbManagerProps> = ({
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            <a
-              href="/api/db/export"
-              download="mismu-database-backup.json"
+            <button
+              type="button"
+              onClick={handleDownloadJson}
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-800 whitespace-nowrap"
             >
               <Download className="w-3.5 h-3.5" />
               Download DB JSON
-            </a>
+            </button>
             <button
               type="button"
               onClick={handleResetDb}
