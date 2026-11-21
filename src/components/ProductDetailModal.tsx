@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X, Truck, ShieldCheck, Minus, Plus, Package, Zap, ShoppingCart } from 'lucide-react';
 import type { CityRate, Product } from '../types/store';
-import { formatPKR } from '../utils/format';
+import { assetUrl, formatPKR } from '../utils/format';
 
 interface ProductDetailModalProps {
   product: Product | null;
@@ -64,7 +64,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
         <div className="bg-slate-100 aspect-[4/3] md:aspect-auto md:h-full">
           {!imgFailed ? (
             <img
-              src={product.image}
+              src={assetUrl(product.image)}
               alt={product.name}
               referrerPolicy="no-referrer"
               onError={() => setImgFailed(true)}

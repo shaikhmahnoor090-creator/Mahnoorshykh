@@ -22,3 +22,15 @@ export function formatPaymentLabel(method: PaymentMethodType): string {
   if (method === 'jazzcash') return 'JazzCash Mobile Account';
   return 'Cash on Delivery (TCS COD)';
 }
+
+export function assetUrl(path: string): string {
+  if (!path) return '';
+  if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('data:')) {
+    return path;
+  }
+  const base =
+    (import.meta as unknown as { env?: { BASE_URL?: string } }).env?.BASE_URL || '/';
+  const normalizedBase = base.endsWith('/') ? base : `${base}/`;
+  const cleanPath = path.replace(/^\/+/, '');
+  return `${normalizedBase}${cleanPath}`;
+}

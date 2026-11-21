@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { ShoppingBag, Search, MapPin, ArrowRight, Database } from 'lucide-react';
 import { DEFAULT_MISMU_DB } from './data/defaultDb';
 import type { MismuDatabase, Order, Product, ProductCategory } from './types/store';
-import { formatPKR } from './utils/format';
+import { assetUrl, formatPKR } from './utils/format';
 import { MismuLogo } from './components/MismuLogo';
 import { ProductCard } from './components/ProductCard';
 import { ProductDetailModal } from './components/ProductDetailModal';
@@ -295,7 +295,7 @@ export default function App() {
                     <div className="h-full min-h-[280px] lg:min-h-[400px] rounded-2xl overflow-hidden border border-slate-200 bg-slate-100">
                       {!heroImgFailed ? (
                         <img
-                          src="/src/assets/images/hero_mismu_lifestyle_1795271074892.jpg"
+                          src={assetUrl('/src/assets/images/hero_mismu_lifestyle_1795271074892.jpg')}
                           alt="Mismu bright lifestyle collection on travertine table"
                           referrerPolicy="no-referrer"
                           onError={() => setHeroImgFailed(true)}

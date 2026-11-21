@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Package, ShoppingCart, Check, Zap } from 'lucide-react';
 import type { Product } from '../types/store';
-import { formatPKR } from '../utils/format';
+import { assetUrl, formatPKR } from '../utils/format';
 
 interface ProductCardProps {
   product: Product;
@@ -48,7 +48,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       <div className="relative aspect-[4/3] w-full bg-slate-100 overflow-hidden">
         {!imgFailed ? (
           <img
-            src={product.image}
+            src={assetUrl(product.image)}
             alt={product.name}
             referrerPolicy="no-referrer"
             onError={() => setImgFailed(true)}

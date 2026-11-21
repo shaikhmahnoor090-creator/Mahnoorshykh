@@ -20,7 +20,7 @@ import type {
   Product,
   TcsServiceTier,
 } from '../types/store';
-import { computeDeliveryFee, formatPKR, formatPaymentLabel } from '../utils/format';
+import { assetUrl, computeDeliveryFee, formatPKR, formatPaymentLabel } from '../utils/format';
 import { createOrder } from '../utils/storeApi';
 
 export interface CartItem {
@@ -256,7 +256,7 @@ export const CartCheckoutDrawer: React.FC<CartCheckoutDrawerProps> = ({
                     {items.map(({ product, quantity }) => (
                       <div key={product.id} className="py-4 flex gap-4">
                         <img
-                          src={product.image}
+                          src={assetUrl(product.image)}
                           alt={product.name}
                           referrerPolicy="no-referrer"
                           className="w-20 h-20 rounded-lg object-cover bg-slate-100 border border-slate-200 shrink-0"
@@ -349,7 +349,7 @@ export const CartCheckoutDrawer: React.FC<CartCheckoutDrawerProps> = ({
                     <div key={product.id} className="py-2 flex items-center justify-between gap-3 text-xs">
                       <div className="flex items-center gap-2.5 min-w-0">
                         <img
-                          src={product.image}
+                          src={assetUrl(product.image)}
                           alt={product.name}
                           referrerPolicy="no-referrer"
                           className="w-10 h-10 rounded-md object-cover border border-slate-200 shrink-0"
